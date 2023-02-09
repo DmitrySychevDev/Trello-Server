@@ -13,6 +13,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const uuid = require("uuid");
 const { validationResult } = require("express-validator");
+const { where } = require("sequelize");
 
 class UserController {
   async login(req, res, next) {
@@ -23,10 +24,12 @@ class UserController {
 
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email: email } });
     if (user === null) {
       return next(ApiError.notFound("User not found"));
     }
+
+    console.log(user);
 
     const isPassworValid = await bcrypt.compare(password, user.password);
     if (!isPassworValid) {
@@ -57,7 +60,7 @@ class UserController {
 
       const { email, name, password } = req.body;
 
-      const candidate = await User.findOne({ where: { email } });
+      const candidate = await User.findOne({ where: { email: email } });
       if (candidate !== null) {
         return next(
           ApiError.badRequest("User with this emall has already been registred")
