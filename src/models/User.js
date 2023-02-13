@@ -8,4 +8,5 @@ module.exports = sequelize.define("user", {
   password: { type: DataTypes.STRING, allowNull: false },
   refreshToken: { type: DataTypes.STRING },
   isActivate: { type: DataTypes.BOOLEAN, defaultValue: false },
+  activationLink: { type: DataTypes.STRING, allowNull: false },
 });

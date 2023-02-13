@@ -17,5 +17,5 @@ router.post(
   body("password").isLength({ min: 3, max: 32 }),
   userController.login
 );
-
+router.get("/activate/:activationLink", userController.activate);
 module.exports = router;

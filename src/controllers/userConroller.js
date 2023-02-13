@@ -66,18 +66,22 @@ class UserController {
           ApiError.badRequest("User with this emall has already been registred")
         );
       } else {
-        const uniqueKey = uuid.v4();
+        const code = uuid.v4();
 
         const hashPassword = await bcrypt.hash(password, 5);
-
-        //TODO: Поправить ссылку для активации
 
         const user = await User.create({
           email,
           name,
           password: hashPassword,
           refreshToken: null,
+          activationLink: code,
         });
+
+        await mailSendServiсe.sendMail(
+          email,
+          `${process.env.API_URL}/api/user/activate/${code}`
+        );
 
         const dto = new UserDto(user);
         const tokens = tokenService.generateTokens({ ...dto });
@@ -95,6 +99,27 @@ class UserController {
       }
     } catch (e) {
       ApiError.internal("Some unknown error");
+    }
+  }
+
+  async activate(req, res, next) {
+    try {
+      const activationCode = req.params.activationLink;
+
+      const user = await User.findOne({
+        where: { activationLink: activationCode },
+      });
+
+      if (User === null) {
+        return next(ApiError.notFound("Invalid link"));
+      }
+
+      user.isActivate = true;
+      await user.save();
+
+      return res.redirect(process.env.CLIENT_URL);
+    } catch (e) {
+      return next(ApiError.internal("Some internal error"));
     }
   }
 }
