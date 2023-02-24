@@ -13,7 +13,17 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const uuid = require("uuid");
 const { validationResult } = require("express-validator");
-const { where } = require("sequelize");
+
+const generateAndsaveTokens = async (res, user, dto) => {
+  const tokens = tokenService.generateTokens({ ...dto });
+  await tokenService.saveToken(user.id, tokens.refreshToken);
+
+  res.cookie("refreshToken", tokens.refreshToken, {
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+  });
+  return tokens;
+};
 
 class UserController {
   async login(req, res, next) {
@@ -29,21 +39,12 @@ class UserController {
       return next(ApiError.notFound("User not found"));
     }
 
-    console.log(user);
-
     const isPassworValid = await bcrypt.compare(password, user.password);
     if (!isPassworValid) {
       return next(ApiError.badRequest("Invalid invalid password"));
     }
-
     const dto = new UserDto(user);
-    const tokens = tokenService.generateTokens({ ...dto });
-    await tokenService.saveToken(user.id, tokens.refreshToken);
-
-    res.cookie("refreshToken", tokens.refreshToken, {
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-    });
+    const tokens = await generateAndsaveTokens(res, user, dto);
 
     return res.status(200).json({
       ...tokens,
@@ -84,13 +85,7 @@ class UserController {
         );
 
         const dto = new UserDto(user);
-        const tokens = tokenService.generateTokens({ ...dto });
-        await tokenService.saveToken(user.id, tokens.refreshToken);
-
-        res.cookie("refreshToken", tokens.refreshToken, {
-          maxAge: 30 * 24 * 60 * 60 * 1000,
-          httpOnly: true,
-        });
+        const tokens = await generateAndsaveTokens(res, user, dto);
 
         return res.status(200).json({
           ...tokens,
@@ -120,6 +115,51 @@ class UserController {
       return res.redirect(process.env.CLIENT_URL);
     } catch (e) {
       return next(ApiError.internal("Some internal error"));
+    }
+  }
+  async logout(req, res, next) {
+    try {
+      const activationCode = req.params.activationLink;
+
+      const user = await User.findOne({
+        where: { activationLink: activationCode },
+      });
+
+      if (User === null) {
+        return next(ApiError.notFound("Invalid link"));
+      }
+
+      user.isActivate = true;
+      await user.save();
+
+      return res.redirect(process.env.CLIENT_URL);
+    } catch (e) {
+      return next(ApiError.internal("Some internal error"));
+    }
+  }
+
+  async refresh(req, res, next) {
+    try {
+      const { refreshToken } = req.cookies;
+
+      if (!refreshToken) {
+        next(ApiError.forbidden("User is not authorizated"));
+      }
+
+      const userData = tokenService.verifyRefreshToken(refreshToken);
+      const tokenFromDb = await tokenService.findToken(refreshToken);
+      console.log(1);
+      if (!userData || !tokenFromDb) {
+        return next(ApiError.forbidden("User is not authorizated"));
+      }
+      const user = await User.findByPk(userData.id);
+      const dto = new UserDto(user);
+      const tokens = await generateAndsaveTokens(res, user, dto);
+
+      res.status(200).json(userData);
+    } catch (e) {
+      console.error(e);
+      return next(ApiError.internal("some internal error"));
     }
   }
 }

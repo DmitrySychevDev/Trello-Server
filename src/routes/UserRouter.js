@@ -18,4 +18,5 @@ router.post(
   userController.login
 );
 router.get("/activate/:activationLink", userController.activate);
+router.get("/refresh", userController.refresh);
 module.exports = router;

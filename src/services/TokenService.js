@@ -22,6 +22,32 @@ class TokenService {
     user.refreshToken = refreshToken;
     await user.save();
   }
+
+  verifyAccessToken(token) {
+    try {
+      const userData = jwt.verify(token, process.env.JWT_ACCESS_KEY);
+      return userData;
+    } catch (e) {
+      return null;
+    }
+  }
+  verifyRefreshToken(token) {
+    try {
+      const userData = jwt.verify(token, process.env.JWT_REFRESH_KEY);
+      return userData;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async findToken(token) {
+    const tokenData = await User.findOne({ where: { refreshToken: token } });
+    if (tokenData !== null) {
+      return tokenData.refreshToken;
+    } else {
+      return null;
+    }
+  }
 }
 
 module.exports = new TokenService();
