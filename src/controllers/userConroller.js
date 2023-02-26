@@ -1,3 +1,8 @@
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const uuid = require("uuid");
+const { validationResult } = require("express-validator");
+
 // Models
 const { User } = require("../models/References");
 
@@ -5,25 +10,10 @@ const { User } = require("../models/References");
 const ApiError = require("../Error/ApiError");
 const mailSendServiсe = require("../services/MailSendServiсe");
 const tokenService = require("../services/TokenService");
+const userService = require("../services/UserService");
 
 // DTOS
 const UserDto = require("../dtos/UserDto");
-
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const uuid = require("uuid");
-const { validationResult } = require("express-validator");
-
-const generateAndsaveTokens = async (res, user, dto) => {
-  const tokens = tokenService.generateTokens({ ...dto });
-  await tokenService.saveToken(user.id, tokens.refreshToken);
-
-  res.cookie("refreshToken", tokens.refreshToken, {
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-  });
-  return tokens;
-};
 
 class UserController {
   async login(req, res, next) {
@@ -44,10 +34,10 @@ class UserController {
       return next(ApiError.badRequest("Invalid invalid password"));
     }
     const dto = new UserDto(user);
-    const tokens = await generateAndsaveTokens(res, user, dto);
+    const tokens = await userService.generateAndsaveTokens(res, user, dto);
 
     return res.status(200).json({
-      ...tokens,
+      accessToken: tokens.accessToken,
       user: dto,
     });
   }
@@ -56,7 +46,7 @@ class UserController {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return next(ApiError.badRequest("Invalid body"));
+        return next(res.status(400).json(errors));
       }
 
       const { email, name, password } = req.body;
@@ -85,10 +75,10 @@ class UserController {
         );
 
         const dto = new UserDto(user);
-        const tokens = await generateAndsaveTokens(res, user, dto);
+        const tokens = await userService.generateAndsaveTokens(res, user, dto);
 
         return res.status(200).json({
-          ...tokens,
+          accessToken: tokens.accessToken,
           user: dto,
         });
       }
@@ -119,20 +109,7 @@ class UserController {
   }
   async logout(req, res, next) {
     try {
-      const activationCode = req.params.activationLink;
-
-      const user = await User.findOne({
-        where: { activationLink: activationCode },
-      });
-
-      if (User === null) {
-        return next(ApiError.notFound("Invalid link"));
-      }
-
-      user.isActivate = true;
-      await user.save();
-
-      return res.redirect(process.env.CLIENT_URL);
+      res.clearCookie("refreshToken");
     } catch (e) {
       return next(ApiError.internal("Some internal error"));
     }
@@ -148,15 +125,14 @@ class UserController {
 
       const userData = tokenService.verifyRefreshToken(refreshToken);
       const tokenFromDb = await tokenService.findToken(refreshToken);
-      console.log(1);
       if (!userData || !tokenFromDb) {
         return next(ApiError.forbidden("User is not authorizated"));
       }
       const user = await User.findByPk(userData.id);
       const dto = new UserDto(user);
-      const tokens = await generateAndsaveTokens(res, user, dto);
+      const tokens = await userService.generateAndsaveTokens(res, user, dto);
 
-      res.status(200).json(userData);
+      res.status(200).json({ ...userData, accessToken: tokens.accessToken });
     } catch (e) {
       console.error(e);
       return next(ApiError.internal("some internal error"));
