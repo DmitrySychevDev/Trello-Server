@@ -40,4 +40,6 @@ router.put(
   boardController.updateBoard
 );
 
+router.delete("/:id", checkToken, boardController.deleteBoard);
+
 module.exports = router;

@@ -9,7 +9,10 @@ const ApiError = require("../Error/ApiError");
 const boardService = require("../services/BoardSevice");
 const BoardSevice = require("../services/BoardSevice");
 
+// Methods on this class ordered by http method
 class BoardController {
+  //Post methods
+
   async createDesc(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -106,6 +109,31 @@ class BoardController {
     }
   }
 
+  // Delete methods
+
+  async deleteBoard(req, res, next) {
+    const user = req.user;
+    const boardId = req.params.id;
+
+    if (!(await boardService.checkAccess(user.id, boardId))) {
+      return next(
+        ApiError.forbidden("This user does't have access to this board")
+      );
+    }
+
+    const deleteRows = await Board.destroy({
+      where: { id: boardId },
+    });
+
+    if (!deleteRows) {
+      return next(ApiError.notFound("Board not found"));
+    }
+
+    return res.status(200).json({
+      message: "Board is deleted successfull",
+    });
+  }
+
   async unatachCollaborators(req, res, next) {
     try {
       const errors = validationResult(req);
@@ -160,6 +188,9 @@ class BoardController {
       return next(ApiError.internal("Some server errror"));
     }
   }
+
+  //Put methods
+
   async updateBoard(req, res, next) {
     try {
       const errors = validationResult(req);
@@ -202,6 +233,8 @@ class BoardController {
     }
   }
 
+  //Get methods
+
   async getBoardById(req, res, next) {
     try {
       const user = req.user;
@@ -229,7 +262,7 @@ class BoardController {
         board: {
           id: targetBoard.id,
           description: targetBoard.description,
-          name: targetBoard.name,
+          name: targetBoard.boardName,
         },
         users,
       });
