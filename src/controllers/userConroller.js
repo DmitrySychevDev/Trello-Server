@@ -19,7 +19,7 @@ class UserController {
   async login(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return next(ApiError.badRequest("Invalid body"));
+      return res.status(400).json(errors);
     }
 
     const { email, password } = req.body;
@@ -46,7 +46,7 @@ class UserController {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return next(res.status(400).json(errors));
+        return res.status(400).json(errors);
       }
 
       const { email, name, password } = req.body;
@@ -107,6 +107,7 @@ class UserController {
       return next(ApiError.internal("Some internal error"));
     }
   }
+
   async logout(req, res, next) {
     try {
       res.clearCookie("refreshToken");

@@ -8,8 +8,10 @@ const boardController = require("../controllers/boardController");
 //Midlewares
 const checkToken = require("../middleware/TokenMiddleware");
 
-router.get("/:id");
-router.put("/:id");
+router.get("/:id", checkToken, boardController.getBoardById);
+
+router.get("/", checkToken, boardController.getBoards);
+
 router.post(
   "/create",
   checkToken,
@@ -23,6 +25,19 @@ router.post(
   body("collaboratorId").exists().isNumeric(),
   boardController.atachCollaborators
 );
-router.delete("/:id");
+router.delete(
+  "/unatach/:id",
+  checkToken,
+  body("collaboratorId").exists().isNumeric(),
+  boardController.unatachCollaborators
+);
+
+router.put(
+  "/update/:id",
+  checkToken,
+  body("name").exists().withMessage("name is requered"),
+  body("description").exists().withMessage("description is requered"),
+  boardController.updateBoard
+);
 
 module.exports = router;
