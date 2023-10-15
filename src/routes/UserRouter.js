@@ -2,6 +2,7 @@ const Router = require("express");
 const router = new Router();
 const { body } = require("express-validator");
 
+//Controllers
 const userController = require("../controllers/userConroller");
 
 router.post(
@@ -18,4 +19,5 @@ router.post(
   userController.login
 );
 router.get("/activate/:activationLink", userController.activate);
+router.get("/refresh", userController.refresh);
 module.exports = router;

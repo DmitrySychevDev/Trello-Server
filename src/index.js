@@ -18,6 +18,7 @@ app.use(cookieParser());
 app.use("/api", router);
 app.use(errorHanling);
 
+
 const start = async () => {
   try {
     await sequelize.authenticate();

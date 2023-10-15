@@ -7,8 +7,13 @@ const Column = require("./Column");
 const sequelize = require("../db");
 const { DataTypes } = require("sequelize");
 
-const UserBoard = sequelize.define("user_board", {
+const UserBoard = sequelize.define("user_boards", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  accessMode: {
+    type: DataTypes.ENUM("owner", "collaborator"),
+    allowNull: false,
+    defaultValue: "collaborator",
+  },
 });
 
 Card.hasMany(Comment);
