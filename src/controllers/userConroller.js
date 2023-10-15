@@ -15,7 +15,18 @@ const userService = require("../services/UserService");
 // DTOS
 const UserDto = require("../dtos/UserDto");
 
+/**
+ * Класс, отвечающий за управление пользователями (аутентификация и регистрация).
+ */
 class UserController {
+  /**
+   * Аутентификация пользователя по email и паролю.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает токены доступа и информацию о пользователе или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь не найден, пароль недействителен, произошла ошибка валидации данных или произошла ошибка сервера.
+   */
   async login(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -42,6 +53,14 @@ class UserController {
     });
   }
 
+  /**
+   * Регистрация нового пользователя.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает токены доступа и информацию о пользователе или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь с таким email уже зарегистрирован, произошла ошибка валидации данных или произошла ошибка сервера.
+   */
   async registration(req, res, next) {
     try {
       const errors = validationResult(req);
@@ -87,6 +106,14 @@ class UserController {
     }
   }
 
+  /**
+   * Активация учетной записи пользователя.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Перенаправляет пользователя на клиентскую страницу после активации или возвращает ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если код активации недействителен или произошла ошибка сервера.
+   */
   async activate(req, res, next) {
     try {
       const activationCode = req.params.activationLink;
@@ -108,6 +135,14 @@ class UserController {
     }
   }
 
+  /**
+   * Выход пользователя из системы (очищает куки).
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает успешное завершение операции выхода пользователя или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если произошла ошибка сервера.
+   */
   async logout(req, res, next) {
     try {
       res.clearCookie("refreshToken");
@@ -116,6 +151,14 @@ class UserController {
     }
   }
 
+  /**
+   * Обновление токена доступа с использованием токена обновления.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает обновленный токен доступа или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь не авторизован, токен обновления недействителен или произошла ошибка сервера.
+   */
   async refresh(req, res, next) {
     try {
       const { refreshToken } = req.cookies;

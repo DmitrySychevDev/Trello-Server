@@ -10,9 +10,21 @@ const boardService = require("../services/BoardSevice");
 const BoardSevice = require("../services/BoardSevice");
 
 // Methods on this class ordered by http method
+
+/**
+ * Класс, отвечает за CRUD операции с досками.
+ */
 class BoardController {
   //Post methods
 
+  /**
+   * Создает новую доску с описанием.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает созданную доску и сообщение о успешном создании или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь не найден или произошла ошибка сервера.
+   */
   async createDesc(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -51,6 +63,14 @@ class BoardController {
     }
   }
 
+  /**
+   * Прикрепляет пользователя к доске.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает информацию о доске и пользователях, прикрепленных к ней, или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь не найден, доска не найдена или произошла ошибка сервера.
+   */
   async atachCollaborators(req, res, next) {
     try {
       const errors = validationResult(req);
@@ -111,6 +131,14 @@ class BoardController {
 
   // Delete methods
 
+  /**
+   * Удаляет доску.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает сообщение об успешном удалении доски или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь не имеет доступа к доске, доска не найдена или произошла ошибка сервера.
+   */
   async deleteBoard(req, res, next) {
     const user = req.user;
     const boardId = req.params.id;
@@ -134,6 +162,14 @@ class BoardController {
     });
   }
 
+  /**
+   * Открепляет пользувателей от доски.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает информацию о доске и пользователях, прикрепленных к ней, после открепления или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь не имеет доступа к доске, доска не найдена, пользователь не найден, пользователь является владельцем доски или произошла ошибка сервера.
+   */
   async unatachCollaborators(req, res, next) {
     try {
       const errors = validationResult(req);
@@ -191,6 +227,14 @@ class BoardController {
 
   //Put methods
 
+  /**
+   * Обновляет информацию о доске (имя и описание).
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает информацию об обновленной доске и ее пользователях или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь не имеет доступа к доске, доска не найдена, произошла ошибка валидации данных или произошла ошибка сервера.
+   */
   async updateBoard(req, res, next) {
     try {
       const errors = validationResult(req);
@@ -235,6 +279,14 @@ class BoardController {
 
   //Get methods
 
+  /**
+   * Получает информацию о доске по ее идентификатору.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает информацию о доске и ее пользователях или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если пользователь не имеет доступа к доске, доска не найдена или произошла ошибка сервера.
+   */
   async getBoardById(req, res, next) {
     try {
       const user = req.user;
@@ -271,6 +323,14 @@ class BoardController {
     }
   }
 
+  /**
+   * Получает список досок, к которым у пользователя есть доступ.
+   * @param {import('express').Request} req - Объект запроса Express.
+   * @param {import('express').Response} res - Объект ответа Express.
+   * @param {import('express').NextFunction} next - Функция, вызываемая для передачи управления следующему middleware.
+   * @returns {Promise<void>} Возвращает список досок и информацию о доступе пользователя к каждой доске или ошибку в случае неудачи.
+   * @throws {ApiError} Возвращает ошибку ApiError, если произошла ошибка сервера.
+   */
   async getBoards(req, res, next) {
     try {
       const user = await User.findByPk(req.user.id);

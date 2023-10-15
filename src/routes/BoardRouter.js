@@ -13,7 +13,7 @@ router.get("/:id", checkToken, boardController.getBoardById);
 router.get("/", checkToken, boardController.getBoards);
 
 router.post(
-  "/create",
+  "/",
   checkToken,
   body("name").exists().withMessage("name is requered"),
   body("description").exists().withMessage("description is requered"),
@@ -33,7 +33,7 @@ router.delete(
 );
 
 router.put(
-  "/update/:id",
+  "/:id",
   checkToken,
   body("name").exists().withMessage("name is requered"),
   body("description").exists().withMessage("description is requered"),
